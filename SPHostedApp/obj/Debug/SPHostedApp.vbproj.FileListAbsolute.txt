@@ -1,0 +1,5 @@
+c:\users\istre\onedrive\documents\visual studio 2013\Projects\SPHostedApp\SPHostedApp\bin\Debug\SPHostedApp.pdb
+c:\users\istre\onedrive\documents\visual studio 2013\Projects\SPHostedApp\SPHostedApp\bin\Debug\SPHostedApp.xml
+c:\users\istre\onedrive\documents\visual studio 2013\Projects\SPHostedApp\SPHostedApp\obj\Debug\SPHostedApp.dll
+c:\users\istre\onedrive\documents\visual studio 2013\Projects\SPHostedApp\SPHostedApp\obj\Debug\SPHostedApp.xml
+c:\users\istre\onedrive\documents\visual studio 2013\Projects\SPHostedApp\SPHostedApp\obj\Debug\SPHostedApp.pdb
