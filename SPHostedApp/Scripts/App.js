@@ -8,7 +8,10 @@
 
     // Get App Web Resources using CSOM
     function initializePage() {
-        var context = SP.ClientContext.get_current();
+        var appUrl = GetUrlKeyValue("SPAppWebUrl");
+        var hostUrl = GetUrlKeyValue("SPHostUrl");
+
+        var context = new SP.ClientContext(appUrl);
 
         var rootFolder = context.get_web().get_rootFolder();
         var folders = rootFolder.get_folders();

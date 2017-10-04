@@ -8,7 +8,10 @@
 
     // Get App Web Resources using CSOM
     function initializePage() {
-        var context = SP.ClientContext.get_current();
+        var appUrl = GetUrlKeyValue("SPAppWebUrl");
+        var hostUrl = GetUrlKeyValue("SPHostUrl");
+
+        var context = new SP.ClientContext(appUrl);
 
         var rootFolder = context.get_web().get_rootFolder();
         var folders = rootFolder.get_folders();
@@ -37,13 +40,12 @@
             var i = 0;
             while (fenum.moveNext()) {
                 i++;
-
                 // Ensure Atleast a Folder has a File
                 if (i == 1) {
                     message.append(folder.get_name()+ ":");
                 }
 
-                // return the current file Object(fileName)
+                // return the current file Object(i.e. fileName)
                 var name = fenum.get_current().get_name();
                 message.append("<div style='padding-left:10px'>" + name + "</div>");
             } // while loop
