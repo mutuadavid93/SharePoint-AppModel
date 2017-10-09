@@ -33,6 +33,11 @@
             <!-- The following content will be replaced with the user name when you run the app - see App.js -->
             initializing...
         </p>
+
+        <p>
+            <a href="../Lists/Categories">Categories List</a>
+            <a href="../Lists/Products">Products List</a>
+        </p>
     </div>
 
 </asp:Content>
