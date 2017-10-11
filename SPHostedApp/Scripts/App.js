@@ -75,7 +75,7 @@
 
             // Get Ready to Provision
             if(SP.ScriptUtility.isNullOrEmptyString(currentVersion) == false){
-                populateInterface();
+                populateInterface(); // invoke if there is no need to Provision
             } else {
                 var call = webRepo.getPermissions(appUrl);
                 call.done(function (data, textStatus, jqXHR) {
@@ -109,8 +109,18 @@
     }); // Document Ready
 
     function populateInterface() {
-        var message = $('#message');
-        message.text("Hello Alternate Dev");
+        // Show Data from the Products List
+        var prodRepo = new Pluralsight.Repositories.ProductRepository(appUrl);
+        var call = prodRepo.getProductsByCategory("Beverages"); // returns a jQuery Promise
+        call.done(function (data, textStatus, jqXHR) {
+            var message = $('#message');
+            message.text("Products:");
+            $.map(data.d.results, function (value, index) {
+                message.append("<br />");
+                message.append(value.Title);
+            }); // end map loop
+        });
+        call.fail(failHandler);
     } // populateInterface()
 
 

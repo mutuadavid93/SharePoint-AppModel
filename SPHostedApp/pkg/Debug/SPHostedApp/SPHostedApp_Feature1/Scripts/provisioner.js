@@ -127,8 +127,7 @@ Pluralsight.Provisioner = function (appUrl, hostUrl) {
         function success() {
             dfd.notify(String.format("\t{0} of {1}", currentProduct, products.length));
             if (currentProduct == products.length) {
-                //updateCurrentVersion();
-                dfd.resolve();
+                updateCurrentVersion(); // invoke updateCurrentVersion
             } else {
                 updateNextSet();
             }
@@ -138,6 +137,24 @@ Pluralsight.Provisioner = function (appUrl, hostUrl) {
             dfd.reject(args);
         }
     } //populateProductsList()
+
+
+    // Handle the Flag Bag Update to Current Version
+    function updateCurrentVersion() {
+        if (!dfd) return;
+        dfd.notify("Updating current version number");
+
+        // Create a new Instance of the Web Repository
+        var repo = new Pluralsight.Repositories.WebRepository();
+        var call = repo.setProperty("CurrentVersion", "1.0.0.0", appUrl);
+        call.done(function(data, textStatus, jqXHR){
+            dfd.notify("Update complete");
+            dfd.resolve();
+        });
+        call.fail(function (jqXHR, textStatus, errorThrown) {
+            dfd.reject(jqXHR);
+        });
+    } // updateCurrentVersion()
 
     // Create a Public Function i.e. Execute
     function execute() {
