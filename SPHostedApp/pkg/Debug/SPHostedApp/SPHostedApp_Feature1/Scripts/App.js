@@ -56,24 +56,44 @@
 
 // Provision With JavaScript on the App Web
 (function () {
-    var appURL = GetUrlKeyValue("SPAppWebUrl");
+    var appUrl = GetUrlKeyValue("SPAppWebUrl");
 
     // Functions in Below Class in repository.js Enable us to Perform
     // Certain Actions Against SharePoint Sites
     var webRepo = new Pluralsight.Repositories.WebRepository();
 
-    $(function () {
+    jQuery(function () {
         var message = $('#message');
 
         // Step 1: Check Whether Provisioning it's required
-        var call = webRepo.getProperties(appURL);
+        var call = webRepo.getProperties(appUrl);
         call.done(function (data, textStatus, errorThrown) {
             var currentVersion = data.d['CurrentVersion'];
-            message.text("Current Version: "+currentVersion);
+
+            // Should return undefined or curversion
+            // message.text("Current Version: "+currentVersion);
+
+            if (!currentVersion) {
+                var call = webRepo.getPermissions(appUrl);
+                call.done(function (data, textStatus, jqXHR) {
+
+                    // Convert the REST results into consumable format
+                    // NB: A userb need manage Web and Lists Perms to be able to 
+                    // create a List in SP
+                    var perms = new SP.BasePermissions();
+                    perms.initPropertiesFromJson(data.d.EffectiveBasePermissions);
+                    var manageWeb = perms.has(SP.PermissionKind.manageWeb);
+                    var manageLists = perms.has(SP.PermissionKind.manageLists);
+
+                    message.text("Manage Web Permission: " + manageWeb);
+                    message.append("<br/>");
+                    message.append("Manage Lists Permission: " + manageLists);
+                });
+                call.fail(failHandler);
+            }
         });
         call.fail(failHandler);
-
-    }); // Document Ready
+    });
 
 
     // Write any Errors We get When Working with REST
