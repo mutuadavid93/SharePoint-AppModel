@@ -9,6 +9,7 @@
     <ElementFile Location="Scripts\jquery-1.9.1.min.js" />
     <ElementFile Location="Scripts\jquery-1.9.1.js" />
     <ElementFile Location="Scripts\jquery-1.9.1.intellisense.js" />
+    <ElementFile Location="Scripts\repositories.js" />
     <ElementManifest Location="Content\Elements.xml" />
     <ElementFile Location="Content\App.css" />
     <ElementManifest Location="Images\Elements.xml" />

@@ -51,3 +51,40 @@
     }// initializePage
 
 })();
+
+
+
+// Provision With JavaScript on the App Web
+(function () {
+    var appURL = GetUrlKeyValue("SPAppWebUrl");
+
+    // Functions in Below Class in repository.js Enable us to Perform
+    // Certain Actions Against SharePoint Sites
+    var webRepo = new Pluralsight.Repositories.WebRepository();
+
+    $(function () {
+        var message = $('#message');
+
+        // Step 1: Check Whether Provisioning it's required
+        var call = webRepo.getProperties(appURL);
+        call.done(function (data, textStatus, errorThrown) {
+            var currentVersion = data.d['CurrentVersion'];
+            message.text("Current Version: "+currentVersion);
+        });
+        call.fail(failHandler);
+
+    }); // Document Ready
+
+
+    // Write any Errors We get When Working with REST
+    function failHandler(jqXHR, textStatus, errorThrown) {
+        var response = "";
+        try{
+            var parsed = JSON.parse(jqXHR.responseText);
+            response = parsed.error.message.value;
+        } catch (Ex) {
+            response = jqXHR.responseText;
+        }
+        alert("Call Failed. Error: "+response);
+    }
+})();
