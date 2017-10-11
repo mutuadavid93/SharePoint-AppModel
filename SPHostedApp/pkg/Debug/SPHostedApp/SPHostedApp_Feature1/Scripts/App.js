@@ -115,14 +115,19 @@
 
 
     // Write any Errors We get When Working with REST
-    function failHandler(jqXHR, textStatus, errorThrown) {
+    // Handle Errors from REST API made by jQuery and CSOM
+    function failHandler(errObj) {
         var response = "";
-        try{
-            var parsed = JSON.parse(jqXHR.responseText);
-            response = parsed.error.message.value;
-        } catch (Ex) {
-            response = jqXHR.responseText;
+        if (errObj.get_message) {
+            response = errObj.get_message();
+        } else {
+            try{
+                var parsed = JSON.parse(errObj.responseText);
+                response = parsed.error.message.value;
+            } catch (Ex) {
+                response = errObj.responseText;
+            }
         }
-        alert("Call Failed. Error: "+response);
-    }
+        alert("Call failed. Error: " + response);
+    } // failHandler
 })();
