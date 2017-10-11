@@ -68,32 +68,50 @@
         // Step 1: Check Whether Provisioning it's required
         var call = webRepo.getProperties(appUrl);
         call.done(function (data, textStatus, errorThrown) {
-            var currentVersion = data.d['CurrentVersion'];
+            var currentVersion = data.d['CurrentVersion']; // flag
 
-            // Should return undefined or curversion
+            // Should return undefined or a Version
             // message.text("Current Version: "+currentVersion);
 
-            if (!currentVersion) {
+            // Get Ready to Provision
+            if(SP.ScriptUtility.isNullOrEmptyString(currentVersion) == false){
+                populateInterface();
+            } else {
                 var call = webRepo.getPermissions(appUrl);
                 call.done(function (data, textStatus, jqXHR) {
-
-                    // Convert the REST results into consumable format
-                    // NB: A userb need manage Web and Lists Perms to be able to 
-                    // create a List in SP
                     var perms = new SP.BasePermissions();
                     perms.initPropertiesFromJson(data.d.EffectiveBasePermissions);
                     var manageWeb = perms.has(SP.PermissionKind.manageWeb);
                     var manageLists = perms.has(SP.PermissionKind.manageLists);
 
-                    message.text("Manage Web Permission: " + manageWeb);
-                    message.append("<br/>");
-                    message.append("Manage Lists Permission: " + manageLists);
+                    if ((manageWeb && manageLists) === false) {
+                        message.text("A site Owner needs to Visit this site to enable Provisioning");
+                    } else {
+                        message.text("Provisioning content to App Web");
+
+                        var prov = new Pluralsight.Provisioner(appUrl);
+                        var call = prov.execute();
+                        call.progress(function (msg) {
+                            message.append("<br/>");
+                            message.append(msg);
+                        });
+                        call.done(function () {
+                            setTimeout(function () {
+                                populateInterface();
+                            }, 4000);
+                        });
+                        call.fail(failHandler);
+                    }
                 });
-                call.fail(failHandler);
             }
         });
         call.fail(failHandler);
-    });
+    }); // Document Ready
+
+    function populateInterface() {
+        var message = $('#message');
+        message.text("Hello Alternate Dev");
+    } // populateInterface()
 
 
     // Write any Errors We get When Working with REST
