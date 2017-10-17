@@ -78,23 +78,32 @@
             if(SP.ScriptUtility.isNullOrEmptyString(currentVersion) == false){
                 populateInterface(); // invoke if there is no need to Provision
             } else {
-                var call = webRepo.getPermissions(appUrl);
-                call.done(function (data, textStatus, jqXHR) {
+                var call1 = webRepo.getPermissions(appUrl);// Get User perms for AppWeb
+                var call2 = webRepo.getPermissions(appUrl, hostUrl); // Get User perms for HostWeb
+
+                var calls = jQuery.when(call1, call2); // Kick off the two calls
+                calls.done(function (appResponse, hostResponse) {
 
                     // Step 2: Check Permissions for the Current User
-                    // i.e. manageLists Perms, To create our Lists
-                    // and  manageWeb, To update the "Property Bag" for the AppWeb
-                    var perms = new SP.BasePermissions();
-                    perms.initPropertiesFromJson(data.d.EffectiveBasePermissions);
-                    var manageWeb = perms.has(SP.PermissionKind.manageWeb);
-                    var manageLists = perms.has(SP.PermissionKind.manageLists);
+                    // i.e. manageLists Perms, To create our Lists in the hostWeb Context
+                    // and  manageWeb Perms, To update the "Property Bag" for the AppWeb
+                    var appPerms = new SP.BasePermissions();
+                    appPerms.initPropertiesFromJson(appResponse[0].d.EffectiveBasePermissions);
+                    var hostPerms = new SP.BasePermissions();
+                    hostPerms.initPropertiesFromJson(hostResponse[0].d.EffectiveBasePermissions);
+                    var manageWeb = appPerms.has(SP.PermissionKind.manageWeb);
+                    var manageLists = hostPerms.has(SP.PermissionKind.manageLists);
 
                     if ((manageWeb && manageLists) === false) {
                         message.text("A site Owner needs to Visit this site to enable Provisioning");
                     } else {
                         message.text("Provisioning content to App Web");
 
-                        var prov = new Pluralsight.Provisioner(appUrl);
+                        // Create an Instance of Our Provisioner Class.
+                        // NB: in the Context of the hostWeb.
+                        var prov = new Pluralsight.Provisioner(appUrl, hostUrl);
+
+                        // Start the Provisioning Process
                         var call = prov.execute();
                         call.progress(function (msg) {
                             message.append("<br/>");
@@ -115,7 +124,8 @@
 
     function populateInterface() {
         // Show Data from the Products List
-        var prodRepo = new Pluralsight.Repositories.ProductRepository(appUrl);
+        // Get the ProductRepository. NB: in the hostWeb Context
+        var prodRepo = new Pluralsight.Repositories.ProductRepository(appUrl, hostUrl);
         var call = prodRepo.getProductsByCategory("Beverages"); // returns a jQuery Promise
         call.done(function (data, textStatus, jqXHR) {
             var message = $('#message');
