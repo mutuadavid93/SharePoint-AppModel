@@ -57,6 +57,7 @@
 // Provision With JavaScript on the App Web
 (function () {
     var appUrl = GetUrlKeyValue("SPAppWebUrl");
+    var hostUrl = GetUrlKeyValue("SPHostUrl");
 
     // Functions in Below Class in repository.js Enable us to Perform
     // Certain Actions Against SharePoint Sites
@@ -66,7 +67,7 @@
         var message = $('#message');
 
         // Step 1: Check Whether Provisioning it's required
-        var call = webRepo.getProperties(appUrl);
+        var call = webRepo.getProperties(appUrl); // Get the Properties from the "Property Bag" in the AppWeb
         call.done(function (data, textStatus, errorThrown) {
             var currentVersion = data.d['CurrentVersion']; // flag
 
@@ -79,6 +80,10 @@
             } else {
                 var call = webRepo.getPermissions(appUrl);
                 call.done(function (data, textStatus, jqXHR) {
+
+                    // Step 2: Check Permissions for the Current User
+                    // i.e. manageLists Perms, To create our Lists
+                    // and  manageWeb, To update the "Property Bag" for the AppWeb
                     var perms = new SP.BasePermissions();
                     perms.initPropertiesFromJson(data.d.EffectiveBasePermissions);
                     var manageWeb = perms.has(SP.PermissionKind.manageWeb);
