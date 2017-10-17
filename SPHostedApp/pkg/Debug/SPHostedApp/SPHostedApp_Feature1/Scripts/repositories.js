@@ -1,6 +1,8 @@
 ﻿window.Pluralsight = window.Pluralsight || {};
 window.Pluralsight.Repositories = window.Pluralsight.Repositories || {};
 
+// For the CSOM:
+// One codeBase to work whether we are targeting the hostWeb or AppWeb
 Pluralsight.Repositories.getWeb = function (context, hostUrl) {
     var web = null;
 
@@ -8,12 +10,18 @@ Pluralsight.Repositories.getWeb = function (context, hostUrl) {
         var hostContext = new SP.AppContextSite(context, hostUrl);
         web = hostContext.get_web();
     } else {
-        web = context.get_web();
+
+        // if there is no hostUrl, get the Web Object( i.e. get_web() )
+        // using the context that was passed in.
+        web = context.get_web(); 
     }
 
     return web;
 }
 
+// For the REST API:
+// Implementation of the targetUrl
+// One codeBase to work whether we are targeting the hostWeb or AppWeb
 Pluralsight.Repositories.targetUrl = function (url, hostUrl) {
     if (hostUrl) {
         var api = "_api/";
@@ -30,6 +38,8 @@ Pluralsight.Repositories.targetUrl = function (url, hostUrl) {
         url = url + connector + "@target='" + hostUrl + "'";
     }
 
+    // if the host url is null or undefined, return the 
+    // original url we were passed to the function
     return url;
 }
 
@@ -119,6 +129,7 @@ Pluralsight.Repositories.CategoryRepository = function (appUrl) {
     }
 }
 
+// This the ProductsRepository
 Pluralsight.Repositories.ProductRepository = function (appUrl, hostUrl) {
     var listUrl = "/_api/Web/Lists/getByTitle('Products')";
 

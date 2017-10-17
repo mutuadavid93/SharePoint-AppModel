@@ -6,35 +6,107 @@ window.Pluralsight = window.Pluralsight || {};
 /// in the Pluralsight Namespace
 Pluralsight.Provisioner = function (appUrl, hostUrl) {
     var dfd;
+    var categoryListId; // store the Category List ID
+    
+    // ##########################################
+    // ## BEGIN CREATE CATEGORIES LIST SECTION ##
+    // ##########################################
 
-    function categoryListID() {
+    function createCategoriesList() {
         if (!dfd) return;
-        dfd.notify("Getting Category list id");
+        dfd.notify("Creating Categories list");
 
+        // in the Context of the HostWeb
         var context = new SP.ClientContext(appUrl);
-        var web = context.get_web();
+        var web = Pluralsight.Repositories.getWeb(context, hostUrl);
 
-        var list = web.get_lists().getByTitle("Categories");
+        // Now Create the List
+        var lci = new SP.ListCreationInformation();
+        lci.set_title("Categories");
+        lci.set_templateType(SP.ListTemplateType.genericList);
+        var list = web.get_lists().add(lci);
 
-        context.load(list, "Id");
+        // Add a Description Field
+        list.get_fields().addFieldAsXml('<Field DisplayName="Description" Type="Text" Required="FALSE" Name="Cat_Description" />', true, SP.AddFieldOptions.defaultValue);
+
+        context.load(list);
         context.executeQueryAsync(success, fail);
 
         function success() {
-            createProductsList(list.get_id()); // invoke passing the ListID
+            dfd.notify("Categories list created!!");
+
+            // Real "Category List" ID
+            categoryListId = list.get_id();
+            getCategoriesData(); // invoke to request Sample List Data
         }
 
         function fail(sender, args) {
             dfd.reject(args);
         }
-    } // categoryListID()
 
-    function createProductsList(categoryListID) {
+    } // createCategoriesList()
+
+
+    function getCategoriesData() {
+        if (!dfd) return;
+        dfd.notify("Requesting Categories Sample List Data");
+
+        var $url = appUrl + "/Content/CategoriesData.txt";
+        var call = jQuery.get($url);
+        call.done(function (data, textStatus, jqXHR) {
+            populateCategoriesList(data);
+        }); // done
+        call.fail(function (jqXHR, textStatus, errorThrown) {
+            dfd.reject(jqXHR);
+        });
+    } // getCategoriesData()
+
+    function populateCategoriesList(data) {
+        if (!dfd) return;
+        dfd.notify("Populating Categories list");
+
+        // HostWeb Context
+        var context = new SP.ClientContext(appUrl);
+        var web = Pluralsight.Repositories.getWeb(context, hostUrl);
+        var list = web.get_lists().getByTitle("Categories");
+
+        var categories = JSON.parse(data);
+        for (var i = 0; i < categories.length; i++) {
+            var value = categories[i];
+            var ici = new SP.ListCreationInformation();
+            var item = list.addItem(ici);
+
+            item.set_item("Title", value.Title);
+            item.set_item("Description", value.Description);
+            item.update();
+        }; // for Loop
+
+        context.executeQueryAsync(success, fail);
+
+        function success() {
+            dfd.notify("Categories List now Populated");
+            createProductsList(); // invoke to Create the Next List i.e. "Products"
+        }
+
+        function fail(sender, args) {
+            dfd.reject(args);
+        }
+    } // populateCategoriesList()
+
+    // ########################################
+    // ## END CREATE CATEGORIES LIST SECTION ##
+    // ########################################
+
+
+    function createProductsList() {
         // make sure the instance of the Deferred Object it's being Created.
         if (!dfd) return;
         dfd.notify("Creating Products list"); // Send a progress message back to App.js
 
+        // Now target the HostWeb
+        // Using the getWeb() Repo from repository.js
         var context = new SP.ClientContext(appUrl);
-        var web = context.get_web();
+        var web = Pluralsight.Repositories.getWeb(context, hostUrl);
 
         // Now Create the List
         var lci = new SP.ListCreationInformation();
@@ -43,7 +115,7 @@ Pluralsight.Provisioner = function (appUrl, hostUrl) {
         var list = web.get_lists().add(lci);
 
         // Now Add Custom Columns/Fields
-        list.get_fields().addFieldAsXml('<Field DisplayName="Category" Type="Lookup" Required="FALSE" List="{' + categoryListID + '}" Name="Category" ShowField="Title" Version="1" />', true, SP.AddFieldOptions.defaultValue);
+        list.get_fields().addFieldAsXml('<Field DisplayName="Category" Type="Lookup" Required="FALSE" List="{' + categoryListId + '}" Name="Category" ShowField="Title" Version="1" />', true, SP.AddFieldOptions.defaultValue);
         list.get_fields().addFieldAsXml('<Field DisplayName="QuantityPerUnit" Type="Text" Required="FALSE" Name="QuantityPerUnit" />', true, SP.AddFieldOptions.defaultValue);
         list.get_fields().addFieldAsXml('<Field DisplayName="UnitPrice" Type="Currency" Required="FALSE" Name="UnitPrice" />', true, SP.AddFieldOptions.defaultValue);
         list.get_fields().addFieldAsXml('<Field DisplayName="UnitsInStock" Type="Integer" Required="FALSE" Name="UnitsInStock" />', true, SP.AddFieldOptions.defaultValue);
@@ -83,8 +155,10 @@ Pluralsight.Provisioner = function (appUrl, hostUrl) {
         if (!dfd) return;
         dfd.notify("Populating Products list");
 
+        // Now target the HostWeb
+        // Using the getWeb() Repo from repository.js
         var context = new SP.ClientContext(appUrl);
-        var web = context.get_web();
+        var web = Pluralsight.Repositories.getWeb(context, hostUrl);
         var list = web.get_lists().getByTitle("Products");
 
         var products = JSON.parse(data);
@@ -139,7 +213,7 @@ Pluralsight.Provisioner = function (appUrl, hostUrl) {
     } //populateProductsList()
 
 
-    // Handle the Flag Bag Update to Current Version
+    // Handle the Flag Bag Update to Current Version in the AppWeb
     function updateCurrentVersion() {
         if (!dfd) return;
         dfd.notify("Updating current version number");
@@ -161,7 +235,8 @@ Pluralsight.Provisioner = function (appUrl, hostUrl) {
         dfd = new $.Deferred();
 
         // Start Provisioning Process From Here
-        categoryListID();
+        // createCategoriesList() is Very First Step in our Provisioning Chain;
+        createCategoriesList();
 
         // Return a promise
         return dfd.promise();
