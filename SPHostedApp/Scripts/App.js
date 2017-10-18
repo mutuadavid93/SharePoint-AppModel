@@ -2,6 +2,104 @@
 
 
 (function () {
+    
+    // ###############################################
+    // ## BEGIN PROVISIONING WEB PART FILES SECTION ##
+    // ###############################################
+
+    var myAppUrl = GetUrlKeyValue("SPAppWebUrl");
+    var myHostUrl = GetUrlKeyValue("SPHostUrl");
+
+    jQuery(document).ready(function(){
+        jQuery('#addWebPartFilesButton').click(addWebPartFiles);
+    }); // document ready
+
+    function addWebPartFiles() {
+        // Ensure we have a Valid FormDigest
+        UpdateFormDigest(_spPageContextInfo.webServerRelativeUrl, _spFormDigestRefreshInterval);
+
+        // NB: You can as well check if current_user has Perms to add Files to HostWeb here
+        // then Disabling the Button if they Don't
+
+        // Call1: Read the File databinding.txt out of the WebPartContent in the AppWeb 
+        // and copy it to SiteAssets in the HostWeb.
+        var call1 = copyFile("WebPartContent", "Site Assets", "databinding.txt");
+        var call2 = copyFile("WebPartContent", "Web Part Gallery", "databinding.dwp");
+        var calls = jQuery.when(call1, call2);
+        calls.done(function (response1, response2) {
+            var message = jQuery('#webpart_message');
+            message.text("Web Part files copied");
+        });
+        calls.fail(failHandlerTwo);
+    } // addWebPartFiles()
+
+    // Step 1: Read the files' Content out of the AppWeb
+    // Step 2: Add a new file with the Contents Read from Step 1
+
+    function getFile(sourceFolder, fileName) {
+        // Get the Relative Path to the File in the AppWeb
+        var fileUrl = String.format("{0}/{1}/{2}",
+            _spPageContextInfo.webServerRelativeUrl, sourceFolder, fileName);
+
+        // Now Ask for the Content of the File i.e. $value Parameter.
+        var call = jQuery.ajax({
+            url: myAppUrl + "/_api/Web/GetFileByServerRelativeUrl('" + fileUrl + "')/$value",
+            type: "GET",
+            headers: {
+                Accept: "text/plain"
+            }
+        });
+
+        return call;
+    } // getFile()
+
+    function uploadFile(fileContents, targetLibrary, fileName) {
+        // Add a new File to the Document Library in HostWeb,
+        // And if it Exists Overwrite it.
+        var url = String.format("{0}/_api/SP.AppContextSite(@target)" + 
+            "/Web/Lists/getByTitle('{1}')/RootFolder/Files/Add(url='{2}', overwrite=true)?@target='{3}'",
+            myAppUrl, targetLibrary, fileName, myHostUrl);
+
+        var call = jQuery.ajax({
+            url: url,
+            type: "POST",
+            data: fileContents,
+            processData: false,
+            headers: {
+                "accept": "application/json;odata=verbose",
+                "X-RequestDigest": $("#__REQUESTDIGEST").val(),
+                "content-length": fileContents.length
+            }
+        });
+
+        return call;
+    } // uploadFile()
+
+    // A helper Function
+    function copyFile(sourceFolder, targetLibrary, fileName) {
+        // Read the contents of the File.
+        // Then create the new File in the HostWeb i.e. using uploadFile()
+        var call = getFile(sourceFolder, fileName)
+            .then(function (fileContents) { return uploadFile(fileContents, targetLibrary, fileName) })
+
+        return call;
+    } // copyFile()
+
+    function failHandlerTwo(jqXHR, textStatus, errorThrown) {
+        var response = "";
+        try{
+            var parsed = JSON.parse(jqXHR.responseText);
+            response = parsed.error.message.value;
+        } catch (Ex) {
+            response = jqXHR.responseText;
+        }
+        alert("Call failed. Error: " + response);
+    }
+
+    // ###############################################
+    // ## END PROVISIONING WEB PART FILES SECTION ##
+    // ###############################################
+
     $(function () {
         ExecuteOrDelayUntilScriptLoaded(initializePage, 'sp.js');
     });

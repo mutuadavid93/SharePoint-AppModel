@@ -45,4 +45,9 @@
         </p>
     </div>
 
+    <div>
+        <input id="addWebPartFilesButton" type="button" value="Add Web Part Files" />
+        <br />
+        <p id="webpart_message"></p>
+    </div>
 </asp:Content>
