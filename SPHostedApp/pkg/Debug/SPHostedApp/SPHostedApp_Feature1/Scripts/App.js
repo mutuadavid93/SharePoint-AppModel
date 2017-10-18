@@ -24,7 +24,14 @@
         // Call1: Read the File databinding.txt out of the WebPartContent in the AppWeb 
         // and copy it to SiteAssets in the HostWeb.
         var call1 = copyFile("WebPartContent", "Site Assets", "databinding.txt");
-        var call2 = copyFile("WebPartContent", "Web Part Gallery", "databinding.dwp");
+
+        // After the file has been uploaded, invoke updateWebPartGroup()
+        var webPartFileName = "databinding.dwp";
+        var call2 = getFile("WebPartContent", webPartFileName) // get the File Contents
+            .then(updateContentLink) // invoke updateContentLink() which returns updated fileContents
+            .then(function (fileContents) { return uploadFile(fileContents, "Web Part Gallery", webPartFileName) }) // fileContents get passed to anonymous function
+            .then(updateWebPartGroup); // then update updateWebPartGroup()
+
         var calls = jQuery.when(call1, call2);
         calls.done(function (response1, response2) {
             var message = jQuery('#webpart_message');
@@ -84,6 +91,47 @@
 
         return call;
     } // copyFile()
+
+
+    // NB: data Param represents the response comming back from the call to 
+    // upload the File.
+    function updateWebPartGroup(data) {
+        var file = data.d;
+        // Build up the request to get the ListItem i.e. ListItemAllFields,
+        // Associated with the File that just got created.
+        var url = String.format("{0}/_api/SP.AppContextSite(@target)"+
+            "/Site/RootWeb/GetFileByServerRelativeUrl('{1}')/ListItemAllFields?"+
+            "@target='{2}'",
+            myAppUrl, file.ServerRelativeUrl, myHostUrl);
+
+        var call = jQuery.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify({
+                "__metadata": { type: "SP.Data.OData__x005f_catalogs_x002f_wpItem" },
+                Group: "App Script Part"
+            }),
+            headers: {
+                "accept": "application/json;odata=verbose",
+                "Content-Type": "application/json;odata=verbose",
+                "X-RequestDigest": $("#__REQUESTDIGEST").val(),
+                "IF-MATCH": "*",
+                "X-Http-Method": "PATCH"
+            }
+        });
+    } // updateWebPartGroup()
+
+
+    // Generate the token to Replace it the with the right URL
+    function updateContentLink(fileContents) {
+        var def = new jQuery.Deferred();
+
+        var fileUrl = myHostUrl + "/SiteAssets/databinding.txt";
+        fileContents = fileContents.replace("{ContentLink}", fileUrl);
+        def.resolve(fileContents);
+
+        return def.promise();
+    } // updateContentLink() 
 
     function failHandlerTwo(jqXHR, textStatus, errorThrown) {
         var response = "";

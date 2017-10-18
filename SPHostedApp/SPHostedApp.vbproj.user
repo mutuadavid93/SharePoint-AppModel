@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <SharePointSiteUrl>https://alternateltd.sharepoint.com/sites/devaddins/</SharePointSiteUrl>
+    <SharePointSiteUrl>https://alternateltd.sharepoint.com/sites/dev/</SharePointSiteUrl>
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{C1CDDADD-2546-481F-9697-4EA41081F2FC}">
         <ProjectStore>
-          <AppInstancePackageModifiedTime>2017-10-17T13:22:35.210075Z</AppInstancePackageModifiedTime>
-          <AppInstanceId>4a333376-3db5-4fbf-95d2-2affd67c5f8e</AppInstanceId>
+          <AppInstanceId>bc544554-9d31-47aa-970c-f08fb4c58844</AppInstanceId>
+          <AppInstancePackageModifiedTime>2017-10-18T13:44:46.1734564Z</AppInstancePackageModifiedTime>
         </ProjectStore>
       </FlavorProperties>
     </VisualStudio>
