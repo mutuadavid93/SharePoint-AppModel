@@ -240,6 +240,10 @@
 
 
 
+// ##########################################################
+// ## BEGIN PROVISIONING RESOURCES WITH JAVASCRIPT SECTION ##
+// ##########################################################
+
 // Provision With JavaScript on the App Web
 (function () {
     var appUrl = GetUrlKeyValue("SPAppWebUrl");
@@ -341,4 +345,8 @@
         }
         alert("Call failed. Error: " + response);
     } // failHandler
+
+    // ##########################################################
+    // ## END PROVISIONING RESOURCES WITH JAVASCRIPT SECTION ##
+    // ##########################################################
 })();
