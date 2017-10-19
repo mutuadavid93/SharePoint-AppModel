@@ -12,6 +12,7 @@
 
     jQuery(document).ready(function(){
         jQuery('#addWebPartFilesButton').click(addWebPartFiles);
+        jQuery('#removeWebPartFilesButton').click(removeWebPartFiles);
     }); // document ready
 
     function addWebPartFiles() {
@@ -39,6 +40,25 @@
         });
         calls.fail(failHandlerTwo);
     } // addWebPartFiles()
+
+
+    // DELETING THE WEBPART FILES
+    function removeWebPartFiles(event) {
+        event.preventDefault();
+        // Ensure we have a Valid FormDigest
+        UpdateFormDigest(_spPageContextInfo.webServerRelativeUrl, _spFormDigestRefreshInterval);
+
+        // Delete databinding.txt and databinding.dwp Files from HostWeb.
+        var call1 = deleteFile("Site Assets", "databinding.txt");
+        var call2 = deleteFile("Web Part Gallery", "databinding.dwp");
+        var calls = jQuery.when(call1, call2);
+        calls.done(function (response1, response2) {
+            var message = $('#webpart_message');
+            message.text("Web Part files Removed");
+        });
+        calls.fail(failHandlerTwo);
+    } // removeWebPartFiles()
+
 
     // Step 1: Read the files' Content out of the AppWeb
     // Step 2: Add a new file with the Contents Read from Step 1
@@ -132,6 +152,26 @@
 
         return def.promise();
     } // updateContentLink() 
+
+
+    function deleteFile(targetLibrary, fileName) {
+        var url = String.format("{0}/_api/SP.AppContextSite(@target)"+
+            "/Site/RootWeb/Lists/getByTitle('{1}')/RootFolder/Files('{2}')?@target='{3}'",
+            myAppUrl, targetLibrary, fileName, myHostUrl);
+
+        var call = jQuery.ajax({
+            url: url,
+            type: "POST",
+            headers: {
+                "accept": "application/json;odata=verbose",
+                "X-RequestDigest": $("#__REQUESTDIGEST").val(),
+                "IF-MATCH": "*",
+                "X-Http-Method": "DELETE"
+            }
+        });
+
+        return call; // return the call implementation
+    } // deleteFile()
 
     function failHandlerTwo(jqXHR, textStatus, errorThrown) {
         var response = "";
